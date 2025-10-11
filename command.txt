@@ -1,8 +1,0 @@
-mkdir -p ~/jupyter_data
-
-
-docker run -d \
-  -p 8888:8888 \
-  -v ~/jupyter_data:/home/jovyan/work \
-  --name jupyter_container \
-  jupyter/base-notebook

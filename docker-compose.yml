@@ -1,0 +1,78 @@
+
+services:
+  web:
+    build: ./app
+    container_name: python_app
+    ports:
+      - "5000:5000"
+    environment:
+      - DD_AGENT_HOST=datadog
+      - DD_ENV=dev
+      - DD_SERVICE=python_app
+      - DD_VERSION=1.0.0
+    depends_on:
+      - db
+      - datadog
+      - zabbix-server
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: app_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  datadog:
+    image: datadog/agent:latest
+    container_name: datadog_agent
+    environment:
+      - DD_API_KEY=ec565e8ab5435f3af3723cab846ad239
+      - DD_SITE=datadoghq.com
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  zabbix-db:
+    image: postgres:15
+    container_name: zabbix_db
+    environment:
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbixpass
+      POSTGRES_DB: zabbix
+    volumes:
+      - zabbix_pgdata:/var/lib/postgresql/data
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-6.4-latest
+    container_name: zabbix_server
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbixpass
+      POSTGRES_DB: zabbix
+    depends_on:
+      - zabbix-db
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest
+    container_name: zabbix_web
+    ports:
+      - "8080:8080"
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbixpass
+      POSTGRES_DB: zabbix
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: America/Santiago
+    depends_on:
+      - zabbix-server
+      - zabbix-db
+
+volumes:
+  pgdata:
+  zabbix_pgdata:
