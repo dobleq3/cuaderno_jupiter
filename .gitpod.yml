@@ -1,0 +1,8 @@
+tasks:
+  - name: Iniciar Flask
+    init: pip install -r requirements.txt
+    command: python3 app.py
+
+ports:
+  - port: 5000
+    onOpen: open-preview
